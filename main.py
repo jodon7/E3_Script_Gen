@@ -1,88 +1,112 @@
 import csv
-from pathlib import Path
 import re
+import html
+from pathlib import Path
 
-# ----------------------------
-# File paths
-# ----------------------------
-JSL_TEMPLATE = Path("input/fdc.jsl")
-CSV_FILE = Path("input/in.csv")
-OUTPUT_JSL = Path("output/fdc_combined.jsl")
 
-# ----------------------------
-# Helpers
-# ----------------------------
-def normalize_site(site):
-    """
-    Convert F024 -> F24, leave other formats unchanged
-    """
+def normalize_site(site: str) -> str:
     site = site.strip()
     if site.startswith("F0") and len(site) == 4:
         return "F" + site[2:]
     return site
 
-# ----------------------------
-# Read JSL template
-# ----------------------------
-jsl_text = JSL_TEMPLATE.read_text()
 
-parameter_lines = []
-site = None
-tech = None
+def normalize_headers(row: dict) -> dict:
+    """
+    Normalize CSV headers:
+      - strip whitespace
+      - lowercase
+      - replace underscores with spaces
+    """
+    return {
+        key.strip().lower().replace("_", " "): value
+        for key, value in row.items()
+    }
 
-# ----------------------------
-# Read CSV and build Parameters
-# ----------------------------
-with open(CSV_FILE, newline="", encoding="utf-8") as f:
-    reader = csv.DictReader(f)
 
-    for row in reader:
-        parameter_lines.append(
-            f'/COLLECTION_NAME="{row["Collection Name"]}" '
-            f'/WINDOW="{row["Window"]}" '
-            f'/VARIABLE="{row["Variable"]}" '
-            f'/STATISTIC="{row["Statistic"]}" '
-            f'/CONTEXT_GROUP="{row["Context Group"]}"'
+def generate_jsl(csv_file: Path, template_file: Path, output_file: Path):
+    # ------------------------------------------------------------------
+    # 1. Read template and unescape HTML entities (fixes &amp;lt; issues)
+    # ------------------------------------------------------------------
+    jsl_text = html.unescape(template_file.read_text(encoding="utf-8"))
+
+    parameter_lines = []
+    site = None
+    tech = None
+
+    # ------------------------------------------------------------------
+    # 2. Read CSV and build parameters
+    # ------------------------------------------------------------------
+    with open(csv_file, newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        print("CSV headers found:", reader.fieldnames)
+
+        for raw_row in reader:
+            row = normalize_headers(raw_row)
+
+            parameter_lines.append(
+                f'/COLLECTION_NAME="{row["collection name"]}" '
+                f'/WINDOW="{row["window"]}" '
+                f'/VARIABLE="{row["variable"]}" '
+                f'/STATISTIC="{row["statistic"]}" '
+                f'/CONTEXT_GROUP="{row["context group"]}"'
+            )
+
+            if site is None and row.get("facility"):
+                site = normalize_site(row["facility"])
+
+            if tech is None and row.get("process"):
+                tech = row["process"].strip()
+
+    print("Parameters generated:", len(parameter_lines))
+
+    if not parameter_lines:
+        raise ValueError(
+            "No parameters were generated.\n"
+            "Check CSV headers and ensure the file has data rows."
         )
 
-        # Capture Site / Technology from first row
-        if site is None:
-            site = normalize_site(row.get("Facility", ""))
-        if tech is None:
-            tech = row.get("Process", "").strip()
+    new_parameters = "\n".join(parameter_lines)
 
-# ----------------------------
-# Replace <Parameters> block
-# ----------------------------
-new_parameters = "\n".join(parameter_lines)
-
-jsl_text = re.sub(
-    r"<Parameters>.*?</Parameters>",
-    f"<Parameters>{new_parameters}</Parameters>",
-    jsl_text,
-    flags=re.DOTALL,
-)
-
-# ----------------------------
-# Replace Site / Technology
-# ----------------------------
-if site:
+    # ------------------------------------------------------------------
+    # 3. Inject Parameters (NOTE: tags are REAL <Parameters> now)
+    # ------------------------------------------------------------------
     jsl_text = re.sub(
-        r"<Site>.*?</Site>",
-        f"<Site>{site}</Site>",
+        r"<Parameters>\s*</Parameters>",
+        f"<Parameters>{new_parameters}</Parameters>",
         jsl_text,
+        flags=re.DOTALL,
     )
 
-if tech:
-    jsl_text = re.sub(
-        r"<Technology>.*?</Technology>",
-        f"<Technology>{tech}</Technology>",
-        jsl_text,
-    )
+    # ------------------------------------------------------------------
+    # 4. Inject Site and Technology
+    # ------------------------------------------------------------------
+    if site:
+        jsl_text = re.sub(
+            r"<Site>.*?</Site>",
+            f"<Site>{site}</Site>",
+            jsl_text,
+            flags=re.DOTALL,
+        )
 
-# ----------------------------
-# Write output
-# ----------------------------
-OUTPUT_JSL.write_text(jsl_text)
+    if tech:
+        jsl_text = re.sub(
+            r"<Technology>.*?</Technology>",
+            f"<Technology>{tech}</Technology>",
+            jsl_text,
+            flags=re.DOTALL,
+        )
 
-print(f"Created combined JSL: {OUTPUT_JSL}")
+    # ------------------------------------------------------------------
+    # 5. Final safety checks
+    # ------------------------------------------------------------------
+    if "<Parameters></Parameters>" in jsl_text:
+        raise RuntimeError("Parameters block was not populated.")
+
+    if "&amp;lt;" in jsl_text:
+        raise RuntimeError("HTML-escaped XML detected in output.")
+
+    # ------------------------------------------------------------------
+    # 6. Write output
+    # ------------------------------------------------------------------
+    output_file.write_text(jsl_text, encoding="utf-8")
