@@ -1,0 +1,89 @@
+###############################################
+# Creating a new git instance
+git init
+
+# Connecting to remote repository
+git remote add origin git@github.com:jodon7/DCS_Simplify.git
+
+# Testing remote origin
+git remote -v
+
+# Changing master branch name to main
+git branch -m master main
+
+# Pushing everything to remote repository
+git add --all
+git commit -m "new changes"
+git push
+
+#### Once merge pull requests complete do the following:
+git push
+
+
+###############################################
+# Creating a new branch
+git checkout -b branchname
+
+# Switching branches
+git checkout branchname
+
+
+###############################################
+# Building executable with PyInstaller
+python -m PyInstaller gui.py
+
+
+###############################################
+# GitHub CLI Login
+gh auth login
+# Follow steps and use authentication token in GitHub.
+# Ensure token permissions: repo, read:org, workflow.
+
+# To create a new repository:
+gh repo create my-repo --public --source=. --remote=origin --push
+
+
+###############################################
+# Creating a local git repository (generic)
+git init
+
+# Staging new/changed files
+git add .
+
+# Committing changes
+git commit -m "Initial commit"
+
+# Creating main branch
+git branch -M main
+
+# Connecting to remote repository
+git remote add origin <insert URL>
+
+# If repository already contains files:
+git pull origin main
+
+# Set upstream to main branch
+git push --set-upstream origin main
+
+# Push to repository
+git push
+
+
+###############################################
+# Standard Push Sequence
+git add --all
+git commit -m "new changes"
+git push
+
+#### After merge pull request:
+git push
+
+
+###############################################
+# Branching Workflow
+git checkout -b branchname
+git checkout branchname
+
+# Build executable again if needed
+python -m PyInstaller gui.py
+###############################################
