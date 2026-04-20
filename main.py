@@ -1,4 +1,3 @@
-# This python script takes DOTS output files and generates a wijit script for easy viewing
 import csv
 from pathlib import Path
 import re
@@ -11,28 +10,46 @@ CSV_FILE = Path("input/in.csv")
 OUTPUT_JSL = Path("output/fdc_combined.jsl")
 
 # ----------------------------
-# Read files
+# Helpers
+# ----------------------------
+def normalize_site(site):
+    """
+    Convert F024 -> F24, leave other formats unchanged
+    """
+    site = site.strip()
+    if site.startswith("F0") and len(site) == 4:
+        return "F" + site[2:]
+    return site
+
+# ----------------------------
+# Read JSL template
 # ----------------------------
 jsl_text = JSL_TEMPLATE.read_text()
 
 parameter_lines = []
+site = None
+tech = None
 
+# ----------------------------
+# Read CSV and build Parameters
+# ----------------------------
 with open(CSV_FILE, newline="", encoding="utf-8") as f:
     reader = csv.DictReader(f)
 
     for row in reader:
-        line = (
+        parameter_lines.append(
             f'/COLLECTION_NAME="{row["Collection Name"]}" '
             f'/WINDOW="{row["Window"]}" '
             f'/VARIABLE="{row["Variable"]}" '
             f'/STATISTIC="{row["Statistic"]}" '
             f'/CONTEXT_GROUP="{row["Context Group"]}"'
         )
-        parameter_lines.append(line)
 
-        # Optional: overwrite Site / Technology from first row
-        site = row.get("Facility", "").strip()
-        tech = row.get("Process", "").strip()
+        # Capture Site / Technology from first row
+        if site is None:
+            site = normalize_site(row.get("Facility", ""))
+        if tech is None:
+            tech = row.get("Process", "").strip()
 
 # ----------------------------
 # Replace <Parameters> block
@@ -47,7 +64,7 @@ jsl_text = re.sub(
 )
 
 # ----------------------------
-# Optionally replace Site / Technology
+# Replace Site / Technology
 # ----------------------------
 if site:
     jsl_text = re.sub(
