@@ -1,0 +1,3 @@
+[x] Create remote repo
+[x] Git initialize
+[x] Connect to remote repo
