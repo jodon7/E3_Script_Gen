@@ -1,0 +1,24 @@
+//!
+NamesDefaultToHere(1);
+script = gajt3d:openwijtscript("\[
+&lt;WijtInput&gt;
+  &lt;Task&gt;
+    &lt;TaskName&gt;WIJT&lt;/TaskName&gt;
+    &lt;Daterange&gt;30&lt;/Daterange&gt;
+    &lt;Entity&gt;GTAce&lt;/Entity&gt;
+    &lt;ExtractXML&gt;1&lt;/ExtractXML&gt;
+    &lt;LaunchGraphIT&gt;0&lt;/LaunchGraphIT&gt;
+    &lt;EntityQuery&gt;
+      &lt;Query&gt;
+        &lt;TaskName&gt;FDCSummaryByDate&lt;/TaskName&gt;
+        &lt;MaterialLevel&gt;LOT&lt;/MaterialLevel&gt;
+        &lt;Parameters&gt;&lt;/Parameters&gt;
+      &lt;/Query&gt;
+    &lt;/EntityQuery&gt;
+    &lt;Site&gt;F24&lt;/Site&gt;
+    &lt;Technology&gt;1276&lt;/Technology&gt;
+    &lt;ToolStyle&gt;ENTITY&lt;/ToolStyle&gt;
+    &lt;WriteJSL&gt;FILE&lt;/WriteJSL&gt;
+  &lt;/Task&gt;
+&lt;/WijtInput&gt;
+]\");
