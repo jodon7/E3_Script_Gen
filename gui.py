@@ -1,8 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from pathlib import Path
-
+import sys
 from main import generate_jsl
+
+def resource_path(relative_path: str) -> Path:
+    """Get absolute path to resource, works for dev and PyInstaller"""
+    if hasattr(sys, "_MEIPASS"):
+        return Path(sys._MEIPASS) / relative_path
+    return Path(__file__).parent / relative_path
 
 
 class JSLGui(tk.Tk):
@@ -60,7 +66,7 @@ class JSLGui(tk.Tk):
         try:
             generate_jsl(
                 csv_file=Path(self.csv_path.get()),
-                template_file=Path("fdc_template.txt"),
+                template_file=resource_path("fdc_template.txt"),
                 output_file=Path(self.output_path.get())
             )
             messagebox.showinfo("Success", "JSL file created successfully.")
