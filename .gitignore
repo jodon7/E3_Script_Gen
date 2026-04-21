@@ -1,5 +1,9 @@
 ## Ignore the following files
 notes.txt
+pyinstall.txt
 venv/
 input/
 output/
+build/
+designer.png
+install.sh
