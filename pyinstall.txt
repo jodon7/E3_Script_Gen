@@ -1,0 +1,54 @@
+==================================================
+PYINSTALLER-CHEAT-SHEET(GIT-BASH-WINDOWS)
+==================================================
+#ACTIVATE-VENV
+source venv/Scripts/activate
+#INSTALL-PYINSTALLER
+pip install pyinstaller
+#VERIFY
+pyinstaller --version
+#SIMPLE-BUILD
+pyinstaller script.py
+#NAME-YOUR-APP
+pyinstaller --name MyApp script.py
+#ONE-FILE-EXECUTABLE
+pyinstaller --onefile --name MyApp script.py
+#GUI-APP(NO-CONSOLE)
+pyinstaller --onefile --windowed --name MyApp script.py
+#ADD-ICON(.ICO-ONLY)
+pyinstaller --onefile --windowed --icon=app.ico --name MyApp script.py
+#INCLUDE-DATA-FILES(WINDOWS-USES-SEMICOLON)
+pyinstaller --onefile --add-data "config.json;." script.py
+pyinstaller --onefile --add-data "data;data" script.py
+#ACCESS-DATA-IN-CODE
+import sys
+from pathlib import Path
+if getattr(sys,'frozen',False):
+ BASE_PATH=Path(sys._MEIPASS)
+else:
+ BASE_PATH=Path(__file__).parent
+config_file=BASE_PATH/"config.json"
+#HIDDEN-IMPORTS
+pyinstaller --onefile --hidden-import=module_name script.py
+#CLEAN-BUILD
+pyinstaller --clean --onefile --name MyApp script.py
+rm -rf build dist *.spec
+#DEBUG-EXE
+pyinstaller --onefile --debug=all --name MyApp script.py
+./dist/MyApp.exe
+#SPEC-FILE
+pyinstaller script.py
+pyinstaller MyApp.spec
+#OUTPUT-FOLDERS
+#build/=temp
+#dist/=final-exe
+#*.spec=build-config
+#COMMON-MISTAKES
+#NO-cross-platform
+#FOR-GUI-use--windowed
+#DO-NOT-edit-dist
+#USE-correct-venv
+#DO-NOT-package-venv
+#GOLDEN-RULE
+#APP-NAME-IS-CONTROLLED-BY--name
+==================================================
